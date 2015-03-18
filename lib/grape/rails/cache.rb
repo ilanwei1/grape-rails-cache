@@ -42,9 +42,7 @@ module Grape
           end
 
           def cache(opts = {}, &block)
-            if ENV['RAILS_ENV'] == 'test'
-              block.call
-            else
+
               # HTTP Cache
               cache_key = opts[:key]
 
@@ -59,9 +57,12 @@ module Grape
 
               cache_store_expire_time = opts[:cache_store_expires_in] || opts[:expires_in] || default_expire_time
               ::Rails.cache.fetch(cache_key, raw: true, expires_in: cache_store_expire_time) do
-                block.call.to_json
+                if ENV['RAILS_ENV'] == 'test'
+                  block.call
+                else
+                  block.call.to_json
+                end
               end
-            end
           end
         end
       end
