@@ -42,21 +42,25 @@ module Grape
           end
 
           def cache(opts = {}, &block)
-            # HTTP Cache
-            cache_key = opts[:key]
+            if ENV['RAILS_ENV'] == 'test'
+              block.call
+            else
+              # HTTP Cache
+              cache_key = opts[:key]
 
-            # Set Cache-Control
-            expires_in(opts[:expires_in] || default_expire_time, public: false)
-            if opts[:etag]
-              cache_key += ActiveSupport::Cache.expand_cache_key(opts[:etag])
-              compare_etag(opts[:etag]) # Check if client has fresh version
-            end
+              # Set Cache-Control
+              expires_in(opts[:expires_in] || default_expire_time, public: false)
+              if opts[:etag]
+                cache_key += ActiveSupport::Cache.expand_cache_key(opts[:etag])
+                compare_etag(opts[:etag]) # Check if client has fresh version
+              end
 
-            # Try to fetch from server side cache
+              # Try to fetch from server side cache
 
-            cache_store_expire_time = opts[:cache_store_expires_in] || opts[:expires_in] || default_expire_time
-            ::Rails.cache.fetch(cache_key, raw: true, expires_in: cache_store_expire_time) do
-              block.call.to_json
+              cache_store_expire_time = opts[:cache_store_expires_in] || opts[:expires_in] || default_expire_time
+              ::Rails.cache.fetch(cache_key, raw: true, expires_in: cache_store_expire_time) do
+                block.call.to_json
+              end
             end
           end
         end
