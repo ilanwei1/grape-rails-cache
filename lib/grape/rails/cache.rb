@@ -7,7 +7,7 @@ module Grape
       extend ActiveSupport::Concern
 
       included do
-        formatter :json, Grape::Rails::Cache::JsonFormatter
+        # formatter :json, Grape::Rails::Cache::JsonFormatter
 
         helpers do
           def compare_etag(etag)
@@ -46,14 +46,14 @@ module Grape
             cache_key = opts[:key]
 
             # Set Cache-Control
-            expires_in(opts[:expires_in] || default_expire_time, public: opts.fetch(:public, true) )
-
+            expires_in(opts[:expires_in] || default_expire_time, public: false)
             if opts[:etag]
               cache_key += ActiveSupport::Cache.expand_cache_key(opts[:etag])
               compare_etag(opts[:etag]) # Check if client has fresh version
             end
 
             # Try to fetch from server side cache
+
             cache_store_expire_time = opts[:cache_store_expires_in] || opts[:expires_in] || default_expire_time
             ::Rails.cache.fetch(cache_key, raw: true, expires_in: cache_store_expire_time) do
               block.call.to_json
